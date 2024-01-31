@@ -7,8 +7,6 @@ rm(list=ls())
 invisible(sapply(list.files("Funcoes auxiliares",pattern="*.R$",full.names=TRUE, 
                   ignore.case=TRUE),source,.GlobalEnv))
 source("Geracao de dados/dst.R")
-source("Funcoes auxiliares/fullnu.R")
-source("Funcoes auxiliares/rtruncnorm.R")
 load("Geracao de dados/dados.Rdata")
 
 head(data)
@@ -65,7 +63,6 @@ library(progress)
 format = "(:spin) [:bar] :percent [Decorrido: :elapsedfull || Estimado: :eta] Taxa gl :taxa || Taxa gammaP :prop"
 pb = progress_bar$new(format, clear = FALSE, total = Q, complete = "=", incomplete = "-", width = 100)
 
-
 # -------------------------------------------------------------------------------
 #                                    Amostrador
 # -------------------------------------------------------------------------------
@@ -90,6 +87,7 @@ for(i in 2:Q){
  # a) Atualizando Z
  # ----------------------
  z.samp[i,] = full_Z.TS(G.samp[i-1],prob.samp[i-1,1:G.samp[i-1]],
+                        b,n,y,X,
                         beta.samp[i-1,,1:G.samp[i-1]],
                         tau2.samp[i-1,1:G.samp[i-1]],
                         Delta.samp[i-1,1:G.samp[i-1]],
@@ -129,15 +127,18 @@ for(i in 2:Q){
   tj = t.samp[i-1,index]
   
   # Atualizando beta
-   beta.samp[i,,j] = full_beta.TS(j,tau2.samp[i-1,1:G.samp[i-1]],
+  beta.samp[i,,j] = full_beta.TS(j,b,c,n,p,Xj,Uj,yj,tj,M,
+                                 tau2.samp[i-1,1:G.samp[i-1]],
                                  Delta.samp[i-1,1:G.samp[i-1]])
   
   # Atualizando tau2
-  tau2.samp[i,j] = full_tau2.TS(j,beta.samp[i,,1:G.samp[i-1]],
+  tau2.samp[i,j] = full_tau2.TS(j,b,r,s,Xj,uj,yj,tj,M,
+                                beta.samp[i,,1:G.samp[i-1]],
                                 Delta.samp[i-1,1:G.samp[i-1]])
   
   # Atualizando Delta
-  Delta.samp[i,j] = full_Delta.TS(j,beta.samp[i,,1:G.samp[i-1]],
+  Delta.samp[i,j] = full_Delta.TS(j,b,omega,Xj,uj,yj,tj,M,
+                                  beta.samp[i,,1:G.samp[i-1]],
                                   tau2.samp[i,1:G.samp[i-1]])
   # aqui tomamos eta = 0 para evitar mais conta, lembrar de 
   # alterar a media na funcao full_delta.TS caso eta != 0.
@@ -150,12 +151,14 @@ for(i in 2:Q){
  aux_yxbeta = y-aux_mu
  
  # atualizando U
- u.samp[i,] = full_U.TS(tau2.samp[i,1:Gplus.samp[i]],
+ u.samp[i,] = full_U.TS(aux_mu,aux_yxbeta,n,
+                        tau2.samp[i,1:Gplus.samp[i]],
                         Delta.samp[i,1:Gplus.samp[i]],
                         nu.samp[i-1], t.samp[i-1,], z.samp[i,])
  
  # atualizando T
- t.samp[i,] = full_T.TS(tau2.samp[i,1:Gplus.samp[i]],
+ t.samp[i,] = full_T.TS(aux_mu,aux_yxbeta,n,
+                        tau2.samp[i,1:Gplus.samp[i]],
                         Delta.samp[i,1:Gplus.samp[i]],
                         u.samp[i,], z.samp[i,])
   
@@ -177,7 +180,7 @@ for(i in 2:Q){
  # ----------------------
  # b) atualizando gammaP
  # ----------------------
- gammaProb[i] = full_gammaProb.TS(gammaProb[i-1],n,M,G.samp[i],Gplus.samp[i])
+ gammaProb[i] = full_gammaProb.TS(gammaProb[i-1],phigamma,n,M,G.samp[i],Gplus.samp[i])
  contgamma = ifelse(gammaProb[i]==gammaProb[i-1],contgamma,contgamma + 1)
  
  
@@ -214,9 +217,9 @@ for(i in 2:Q){
  # ----------------------
  # Atualizando nu
  # ----------------------
- nu.samp[i] = full_nu(prob.samp[i,compindex],beta.samp[i,,compindex],
-                       tau2.samp[i,compindex],Delta.samp[i,compindex],
-                       alpha.samp[i],nu.samp[i-1])
+ nu.samp[i] = full_nu(prob.samp[i,compindex],b,n,y,X,phi,beta.samp[i,,compindex],
+                      tau2.samp[i,compindex],Delta.samp[i,compindex],
+                      alpha.samp[i],nu.samp[i-1])
  
  cont = ifelse(nu.samp[i]==nu.samp[i-1],cont,cont + 1)
  

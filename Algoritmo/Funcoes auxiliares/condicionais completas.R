@@ -1,13 +1,10 @@
 # condicionais completas para cada parametro.
-# estou assumindo que os hiperparametros ja estao declarados da forma que aparecem aqui
-# por exemplo, em full_prob o hiperparametro xi ja deve estar declarado fora da
-# funcao
 
 full_alpha = function(nu){
  Runuran::urgamma(1, shape = 2, scale = 1/(nu), lb = .02, ub = .5)
 }
 
-full_nu = function(prob,beta,tau2,Delta,alpha,nu){ 
+full_nu = function(prob,b,n,y,X,phi,beta,tau2,Delta,alpha,nu){ 
  prob = c(prob)
  G = length(prob)
  aux_mu = X%*%beta+matrix(rep(b*Delta,n), nrow = n, ncol = G, byrow = T)
@@ -30,7 +27,7 @@ full_nu = function(prob,beta,tau2,Delta,alpha,nu){
 #                                  Telescoping
 # ==============================================================================
 
-full_Z.TS = function(G,prob,beta,tau2,Delta,nu){
+full_Z.TS = function(G,prob,b,n,y,X,beta,tau2,Delta,nu){
  aux_mu = X%*%beta+matrix(rep(b*Delta,n), nrow = n, ncol = G, byrow = T)
  aux_sig = sqrt(tau2+Delta^2)
  aux_lam = Delta/sqrt(tau2)
@@ -42,8 +39,7 @@ full_Z.TS = function(G,prob,beta,tau2,Delta,nu){
  return(out)
 }
 
-full_beta.TS = function(j,tau2,Delta){
- # Xj, Uj, yj, tj, M ja devem estar especificados
+full_beta.TS = function(j,b,c,n,p,Xj,Uj,yj,tj,M,tau2,Delta){
  if(M[j]==1){ # o R trata uma unica linha de uma matriz como um vetor coluna
   XU = as.matrix(Xj)%*%Uj # t(Xj)%*%Uj
  }else{
@@ -62,15 +58,15 @@ full_beta.TS = function(j,tau2,Delta){
  MASS::mvrnorm(1, mu = mmm,Sigma = ppp)
 }
 
-full_tau2.TS = function(j,beta,Delta){
- # Xj, Uj, yj, tj, M, r, s ja devem estar especificados
+full_tau2.TS = function(j,b,r,s,Xj,uj,yj,tj,M,beta,Delta){
+ beta = as.matrix(beta) # caso tenha so 1 grupo
  S3 = sum(uj*(yj-Xj%*%beta[,j]-(b+tj)*Delta[j])^2)
  
  1/rgamma(1, shape = M[j]/2+r, rate = (S3+s)/2)
 }
 
-full_Delta.TS = function(j,beta,tau2){
- # Xj, Uj, yj, tj, M, omega ja devem estar especificados
+full_Delta.TS = function(j,b,omega,Xj,uj,yj,tj,M,beta,tau2){
+ beta=as.matrix(beta) # caso tenha so 1 grupo
  S1 = sum(uj*(yj-Xj%*%beta[,j])*(b+tj))
  S2 = sum(uj*(b+tj)^2)
  denom = omega^2*S2 + tau2[j]
@@ -80,8 +76,7 @@ full_Delta.TS = function(j,beta,tau2){
  rnorm(1, omega^2*S1/denom, omega*sqrt(tau2[j]/denom))
 }
 
-full_U.TS = function(tau2,Delta,nu,t,z){
- # aux_mu, aux_yxbeta ja devem estar declarados
+full_U.TS = function(aux_mu,aux_yxbeta,n,tau2,Delta,nu,t,z){
  out = NULL
  for(k in 1:n){
   # atualizando U
@@ -92,8 +87,7 @@ full_U.TS = function(tau2,Delta,nu,t,z){
  return(out)
 }
 
-full_T.TS = function(tau2,Delta,u,z){
- # aux_mu, aux_yxbeta ja devem estar declarados
+full_T.TS = function(aux_mu,aux_yxbeta,n,tau2,Delta,u,z){
  out = NULL
  for(k in 1:n){
   aux_denom = Delta[z[k]]^2 + tau2[z[k]]
@@ -126,16 +120,13 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
  }
  
  prob_K = exp(lpriori[Gplus:Gmax]+lprob_K)
- if(is.infinite(sum(prob_K))){stop("Problema na condicional de G")}
+ if(is.infinite(sum(prob_K)) | is.na(sum(prob_K))){stop("Problema na condicional de G")}
  
- aux2 = c(rmultinom(1,1,prob_K))
- options(digits=7)
- 
- Gplus + which(aux2==1)-1
+ sample(Gplus:Gmax,1,prob = prob_K)
 }
 
 
-full_gammaProb.TS = function(gammaP,n,M,G,Gplus){
+full_gammaProb.TS = function(gammaP,phigamma,n,M,G,Gplus){
  #phigamma ja deve estar especificado
  prop = rlnorm(1, log(gammaP), phigamma)
  
