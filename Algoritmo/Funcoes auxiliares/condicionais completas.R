@@ -103,6 +103,7 @@ full_T.TS = function(aux_mu,aux_yxbeta,n,tau2,Delta,u,z){
 
 full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
  options(digits=10)
+ # funcao ainda tem um bug que nao consegui encontrar
  lpriori = if(any(lpriori == "unif")){rep(0,Gmax)}else{lpriori} # vetor com lprioris de K
  lprob_K = NULL
  Mmax = sapply(M, lgamma) # evitar Inf
@@ -120,7 +121,7 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
  }
  
  prob_K = exp(lpriori[Gplus:Gmax]+lprob_K)
- if(is.infinite(sum(prob_K)) | is.na(sum(prob_K))){stop("Problema na condicional de G")}
+ if(is.infinite(sum(prob_K)) | is.na(sum(prob_K))){print(lprob_K);stop("Problema na condicional de G")}
  
  sample(Gplus:Gmax,1,prob = prob_K)
 }

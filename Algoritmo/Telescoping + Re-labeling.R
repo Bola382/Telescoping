@@ -13,12 +13,12 @@
 # Q: numero de iteracoes do algoritmo
 # burn: numero de amostras descartadas
 # thin: tamanho dos saltos apos o burn
+# pbar: se "replicate" apaga barras de progresso apos execucao
 
 telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,burn,thin,pbar=T){
  invisible(sapply(list.files("Funcoes auxiliares",pattern="*.R$",full.names=TRUE, 
                              ignore.case=TRUE),source,.GlobalEnv))
  source("Geracao de dados/dst.R")
- load("Geracao de dados/dados.Rdata")
  
  n = nrow(data)
  p = ncol(data) # numero de betas
@@ -59,11 +59,9 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  # ~~~~~~~~~~~~~~~~~~~
  # Barra de progresso
  # ~~~~~~~~~~~~~~~~~~~
- if(pbar==T){
-  invisible(library(progress))
-  format = "(:spin) [:bar] :percent [Decorrido: :elapsedfull || Estimado: :eta] Taxa gl :taxa || Taxa gammaP :prop"
-  pb = progress_bar$new(format, clear = FALSE, total = Q, complete = "=", incomplete = "-", width = 100)
- }
+ invisible(library(progress))
+ format = "(:spin) [:bar] :percent [Decorrido: :elapsedfull || Estimado: :eta] Taxa gl :taxa || Taxa gammaP :prop"
+ pb = progress_bar$new(format, clear = ifelse(pbar=="replicate",T,F), total = Q, complete = "=", incomplete = "-", width = 100)
  
  # -------------------------------------------------------------------------------
  #                                    Amostrador
@@ -223,10 +221,8 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
   
   cont = ifelse(nu.samp[i]==nu.samp[i-1],cont,cont + 1)
   
-  if(pbar == T){
-   pb$tick(tokens = list(taxa = paste0(formatC(cont/i * 100,2,format="f"),"%"),
-                         prop = paste0(formatC(contgamma/i * 100,2,format="f"),"%")))
-  }
+  pb$tick(tokens = list(taxa = paste0(formatC(cont/i * 100,2,format="f"),"%"),
+                        prop = paste0(formatC(contgamma/i * 100,2,format="f"),"%")))
  };time_ok = Sys.time()-t_tmp
  
  # ==================================================================
@@ -235,7 +231,7 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  # ===================================================================
  
  # aplicando burn-in e thin
- index = seq(burn+1,Q,by=thin)
+ index = seq(floor(burn)+1,Q,by=thin)
  
  beta.samp = beta.samp[index,,]
  tau2.samp = tau2.samp[index,]
@@ -328,7 +324,8 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
   }
  }
  
- out = list(time = time_ok, beta = beta_ok, tau2 = tau2_ok, Delta = Delta_ok,
+ out = list(time = time_ok, taxa_nu = cont/Q, taxa_gama = contgamma/Q, 
+            beta = beta_ok, tau2 = tau2_ok, Delta = Delta_ok,
             nu = nu_ok, prob = prob_ok, gammaProb = gammaProb_ok, alpha = alpha_ok,
             z = z_ok, t = t_ok, u = u_ok, G = G_ok)
  return(out)
