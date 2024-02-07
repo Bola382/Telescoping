@@ -10,8 +10,8 @@ source("rregmixst.R")
 
 tmp_n = 1000
 probs = c(.3,.4,.3)
-beta = cbind(c(-3,4,8), c(-2,-4,8), c(3,5,7))
-sigma = c(2,4,6)
+beta = cbind(c(3,-10,2), c(-2,-4,8), c(3,5,7))
+sigma = c(1,2,3) # 1, 4, 9
 lambda = c(-10,-8,8)
 nu = 3
 
@@ -35,4 +35,4 @@ plot3d(x = data$x1,y = data$x2,z = data$resp, cex = 1.1)
 rm(list = ls(pattern="tmp_"))
 rm(list = lsf.str())
 
-save.image("dados.RData")
+save.image("dadosSeparados.RData")
