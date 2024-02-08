@@ -1,6 +1,9 @@
 # ==============================================================================
 # Gerando amostras da posteriori utilizando Telescoping e solucionando label-switching
 # ==============================================================================
+# necessita carregar a pasta "Funcoes auxiliares" e a funcao "dst.R"
+# e do pacote "compiler"
+
 # valores iniciais exceto G e G_+ gerados das respectivas prioris
 
 # data: matriz de dados, primeira coluna respostas, demais valores das covs
@@ -13,13 +16,11 @@
 # Q: numero de iteracoes do algoritmo
 # burn: numero de amostras descartadas
 # thin: tamanho dos saltos apos o burn
-# pbar: se "replicate" apaga barras de progresso apos execucao
 
-telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,burn,thin,pbar=T){
- invisible(sapply(list.files("Funcoes auxiliares",pattern="*.R$",full.names=TRUE, 
-                             ignore.case=TRUE),source,.GlobalEnv))
- source("Geracao de dados/dst.R")
- 
+
+
+telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,burn,thin){
+ library(compiler)
  n = nrow(data)
  p = ncol(data) # numero de betas
  
@@ -56,13 +57,6 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  t.samp[1,] = abs(rnorm(n))/sqrt(u.samp[1,])
  z.samp[1,] = sample(1:G.samp,n,prob=prob.samp[1,1:G.samp], replace = T) # latente que indica os grupos
  
- # ~~~~~~~~~~~~~~~~~~~
- # Barra de progresso
- # ~~~~~~~~~~~~~~~~~~~
- invisible(library(progress))
- format = "(:spin) [:bar] :percent [Decorrido: :elapsedfull || Estimado: :eta] Taxa gl :taxa || Taxa gammaP :prop"
- pb = progress_bar$new(format, clear = ifelse(pbar=="replicate",T,F), total = Q, complete = "=", incomplete = "-", width = 100)
- 
  # -------------------------------------------------------------------------------
  #                                    Amostrador
  # -------------------------------------------------------------------------------
@@ -70,7 +64,7 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  cont = 0 # contador de aceites de MH para nu
  contgamma = 0 # contador de aceites de MH para gammaProb
  
- library(compiler)
+ 
  enableJIT(3)
  t_tmp = Sys.time()
  for(i in 2:Q){
@@ -221,8 +215,6 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
   
   cont = ifelse(nu.samp[i]==nu.samp[i-1],cont,cont + 1)
   
-  pb$tick(tokens = list(taxa = paste0(formatC(cont/i * 100,2,format="f"),"%"),
-                        prop = paste0(formatC(contgamma/i * 100,2,format="f"),"%")))
  };time_ok = Sys.time()-t_tmp
  
  # ==================================================================
@@ -269,6 +261,28 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  G.samp = G.samp[index2]
  Gplus.samp = Gplus.samp[index2]
  
+ if(GplusHat==1){ # se temos apenas 1 cluster o processo nao e realizado
+  prob_ok = prob.samp[,1]
+  beta_ok = beta.samp[,,1]
+  tau2_ok = tau2.samp[,1]
+  Delta_ok = Delta.samp[,1]
+  z_ok = "todos no cluster 1"
+  t_ok = t.samp
+  u_ok = u.samp
+  nu_ok = nu.samp
+  
+  alpha_ok = alpha.samp
+  gammaProb_ok = gammaProb
+  G_ok = G.samp
+  
+  out = list(time = time_ok, taxa_nu = cont/Q, GplusHat = GplusHat,
+             taxa_gama = contgamma/Q, taxa_permu = taxa_permu,
+             beta = beta_ok, tau2 = tau2_ok, Delta = Delta_ok,
+             nu = nu_ok, prob = prob_ok, gammaProb = gammaProb_ok, alpha = alpha_ok,
+             z = z_ok, t = t_ok, u = u_ok, G = G_ok)
+  return(out)
+ }
+ 
  # montando uma matriz de parametros
  nsamp = length(index2)
  
@@ -293,7 +307,9 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  # verificando quais rotulos sao uma permutacao valida de {1,...,G+}
  idpermu = unlist(sapply(1:nsamp, function(a) if(identical(sort(new_label[a,]),1:GplusHat)){a}))
  npermu = length(idpermu)
+ if(npermu == 0){return("exception")}
  
+ taxa_permu = npermu/nsamp # das amostras com GplusHat comps, quantas tem permutacoes validas 
  # ajustando os rotulos dos parametros em cada permutacao valida
  
  prob_ok = matrix(NA, nrow = npermu, ncol = GplusHat)
@@ -323,10 +339,35 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
    }
   }
  }
+ # iteracoes MCMC, (betas,tau2,Delta,nu,prob), componente
+ paramComp = array(NA, dim = c(npermu, ncol(X) + 3, GplusHat), 
+               dimnames = list(1:npermu,
+                               c(paste0("beta",1:ncol(X)),"tau2","Delta","prob"),
+                               1:GplusHat))
+ paramComp[1:npermu,1:ncol(X),] = beta_ok
+ paramComp[1:npermu,1:(ncol(X)+1),] = tau2_ok
+ paramComp[1:npermu,1:(ncol(X)+2),] = Delta_ok
+ paramComp[1:npermu,1:(ncol(X)+3),] = prob_ok
  
- out = list(time = time_ok, taxa_nu = cont/Q, taxa_gama = contgamma/Q, 
-            beta = beta_ok, tau2 = tau2_ok, Delta = Delta_ok,
-            nu = nu_ok, prob = prob_ok, gammaProb = gammaProb_ok, alpha = alpha_ok,
-            z = z_ok, t = t_ok, u = u_ok, G = G_ok)
+ # iteracoes MCMC, (nu,gammaProb,alpha,G)
+ param = array(NA, dim = c(npermu,4), 
+               dimnames = list(1:npermu,c("nu","gammaProb","alpha","G")))
+ param[1:npermu,1] = nu_ok
+ param[1:npermu,2] = gammaProb_ok
+ param[1:npermu,3] = alpha_ok
+ param[1:npermu,4] = G_ok
+ 
+ # iteracoes MCMC, qual latente, individuos
+ latent = array(NA, dim = c(npermu,3,n), 
+                dimnames = list(1:npermu,
+                                c("z","u","t"),
+                                1:n))
+ latent[1:npermu,1,] = z_ok
+ latent[1:npermu,2,] = u_ok
+ latent[1:npermu,3,] = t_ok
+ 
+ out = list(time = time_ok, taxa_nu = cont/Q,taxa_gama = contgamma/Q, 
+            taxa_permu = taxa_permu, paramComp = paramComp, param = param,
+            latent = latent)
  return(out)
 }

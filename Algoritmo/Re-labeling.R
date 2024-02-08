@@ -4,8 +4,8 @@
 # ===================================================================
 
 # aplicando burn-in e thin
-burn = Q/2; thin = 5
-index = seq(burn+1,Q,by=5)
+burn = Q/4; thin = 15
+index = seq(burn+1,Q,by=thin)
 
 beta.samp = beta.samp[index,,]
 tau2.samp = tau2.samp[index,]

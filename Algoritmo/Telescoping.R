@@ -18,7 +18,7 @@ p = ncol(data)-1 # -1 pois a primeira coluna contem os grupos
 y = data[,2] # resp
 X = as.matrix(cbind(1,data[,-(1:2)])) # covariaveis com intercepto
 
-Q = 50000 # numero de iteracoes
+Q = 100000 # numero de iteracoes
 
 # ~~~~~~~~~~~~~~~~
 # valores iniciais
