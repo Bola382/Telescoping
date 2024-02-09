@@ -105,7 +105,6 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
  options(digits=10)
  lpriori = if(any(lpriori == "unif")){rep(0,Gmax)}else{lpriori} # vetor com lprioris de K
  lprob_K = NULL
- Mmax = sapply(M, lgamma) # evitar Inf
  
  # log probabilidade
  
@@ -116,10 +115,11 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
   aux = sapply(1:Gplus, function(a) lgamma(M[a] + gammaRatio) - lgamma(1 + gammaRatio))
   
   lprob_K[G-Gplus+1] = Gplus*log(gammaProb) - Gplus*log(G) + lfactorial(G) - 
-   lfactorial(G-Gplus) + sum(aux) - sum(Mmax) # evitar Inf
+   lfactorial(G-Gplus) + sum(aux)
  }
- controla = 0 # se nao bastar o passo anterior pra controlar o Inf
- if(any(lprob_K>700)){controla = 700 - max(lprob_K)}
+ controla = 0 # evitar Inf
+ if(any(lprob_K > 700)){controla = -max(lprob_K)}
+ if(any(lprob_K < -700)){controla = -min(lprob_K)}
  
  prob_K = exp(lpriori[Gplus:Gmax]+lprob_K+controla) # evitar Inf
  if(is.infinite(sum(prob_K)) | is.na(sum(prob_K)) | sum(prob_K) == 0){print(lprob_K);stop("Problema na condicional de G")}
