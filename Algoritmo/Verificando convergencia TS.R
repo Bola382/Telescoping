@@ -30,6 +30,7 @@ for (j in 1:GplusHat) {
 # --------------------------------------------
 # gammaProb
 # --------------------------------------------
+par(mfrow = c(1,1), mar = c(4, 4, 3, 1))
 traceplot(mcmc(gammaProb_ok), xlab = "Iterações",
           main = "gamaP")
 
@@ -109,7 +110,12 @@ acf(alpha_ok, xlab = "Iterações", main = "alpha")
 # --------------------------------------------
 
 moda = function(vec){
- unique(vec)[which.max(table(vec))]
+ unique(sort(vec))[which.max(table(vec))]
 }
 
+library(rgl)
 plot3d(x = X[,2],y = X[,3],z = y, col = apply(z_ok,2,moda), cex= 1.1)
+plot3d(x = X[,2],y = X[,3],z = y, col = z_real, cex= 1.1)
+
+table(apply(z_ok,2,moda),
+z_real)

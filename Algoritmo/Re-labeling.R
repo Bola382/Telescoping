@@ -25,7 +25,7 @@ Gplus.samp = Gplus.samp[index]
 # ==================================================================
 
 # estimando G+
-GplusHat = unique(Gplus.samp)[which.max(table(Gplus.samp))]
+GplusHat = unique(sort(Gplus.samp))[which.max(table(Gplus.samp))]
 
 # filtrando amostras com G+ igual ao estimado
 index2 = which(Gplus.samp==GplusHat)

@@ -243,7 +243,7 @@ telescope = function(data,ncomps,nclusters,G.max,lprio_G,phi=.3,phigamma=2.5,Q,b
  # ==================================================================
  
  # estimando G+
- GplusHat = unique(Gplus.samp)[which.max(table(Gplus.samp))]
+ GplusHat = unique(sort(Gplus.samp))[which.max(table(Gplus.samp))]
  
  # filtrando amostras com G+ igual ao estimado
  index2 = which(Gplus.samp==GplusHat)
