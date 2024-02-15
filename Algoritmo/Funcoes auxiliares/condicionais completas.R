@@ -105,7 +105,7 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
  options(digits=10)
  lpriori = if(any(lpriori == "unif")){rep(0,Gmax)}else{lpriori} # vetor com lprioris de K
  lprob_K = NULL
- 
+ Mmax = sapply(M+gammaProb/Gplus, lgamma) # evitar Inf
  # log probabilidade
  
  for(G in Gplus:Gmax){
@@ -117,20 +117,20 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
   lprob_K[G-Gplus+1] = Gplus*log(gammaProb) - Gplus*log(G) + lfactorial(G) - 
    lfactorial(G-Gplus) + sum(aux)
  }
- controla = 0 # evitar Inf
- if(any(lprob_K > 700)){controla = -max(lprob_K)}
- if(any(lprob_K < -700)){controla = -min(lprob_K)}
+ lprob_K = lprob_K - sum(Mmax) + Gplus*lgamma(1+gammaProb/Gplus)
  
- prob_K = exp(lpriori[Gplus:Gmax]+lprob_K+controla) # evitar Inf
- if(is.infinite(sum(prob_K)) | is.na(sum(prob_K)) | sum(prob_K) == 0){print(lprob_K);stop("Problema na condicional de G")}
+ maior = max(abs(lprob_K))
+ 
+ # evitar Inf
+ prob_K = exp(lpriori[Gplus:Gmax]) * exp((lprob_K-max(lprob_K))/maior)^maior 
+ if(is.nan(sum(prob_K)) | is.infinite(sum(prob_K)) | is.na(sum(prob_K)) | sum(prob_K) == 0){return("erro")}
  
  sample(Gplus:Gmax,1,prob = prob_K)
 }
 
 
 full_gammaProb.TS = function(gammaP,phigamma,n,M,G,Gplus){
- #phigamma ja deve estar especificado
- prop = rlnorm(1, log(gammaP), phigamma)
+  prop = rlnorm(1, log(gammaP), phigamma)
  
  aceit = min(1,aceitGamma(gammaP,prop,n,M,G,Gplus))
  if(aceit > 1 | aceit <0){stop("Problema no passo MH")}
