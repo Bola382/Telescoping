@@ -93,6 +93,26 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
                          tau2.samp[1,1:G.samp[1]],
                          Delta.samp[1,1:G.samp[1]],
                          nu.samp[1])
+  if(z.samp[2,1]=="erro"){
+   cat(c(beta.samp[1,,]),"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/betaerro.txt"))
+   cat(tau2.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/tau2erro.txt"))
+   cat(Delta.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/Deltaerro.txt"))
+   cat(prob.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/proberro.txt"))
+   cat(nu.samp[1],gammaProb[1],alpha.samp[1],Gplus.samp[1],G.samp[1],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/paramerro.txt"))
+   cat(z.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/zerro.txt"))
+   cat(u.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/uerro.txt"))
+   cat(t.samp[1,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/terro.txt"))
+   
+   cat(c(beta.samp[2,,]),"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/betaerro.txt"), append=T)
+   cat(tau2.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/tau2erro.txt"), append=T)
+   cat(Delta.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/Deltaerro.txt"), append=T)
+   cat(prob.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/proberro.txt"), append=T)
+   cat(nu.samp[2],gammaProb[2],alpha.samp[2],Gplus.samp[2],G.samp[2],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/paramerro.txt"), append=T)
+   cat(z.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/zerro.txt"), append=T)
+   cat(u.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/uerro.txt"), append=T)
+   cat(t.samp[2,],"\n", file = paste0("Outputs/Paralelo/",file,"/",repl,"/terro.txt"), append=T)
+   stop("erro em z")
+  }
   
   # ------------------------
   # b) determinando Gplus e 
@@ -244,7 +264,8 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
   cont = ifelse(nu.samp[2]==nu.samp[1],cont,cont + 1)
   
   # centralizacao da media
-  b = -sqrt(nu.samp[2]/pi)*(gamma((nu.samp[2]-1)/2)/gamma(nu.samp[2]/2))
+  b = ifelse(nu.samp[2] > 1,-exp(log(nu.samp[2])/2 - log(pi)/2 + lgamma((nu.samp[2]-1)/2) - lgamma(nu.samp[2]/2)),-sqrt(nu.samp[2]/pi)*(gamma((nu.samp[2]-1)/2)/gamma(nu.samp[2]/2)))
+  
   
   # output
   if(i>burn & i%%thin==0){

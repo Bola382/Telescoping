@@ -34,6 +34,7 @@ full_Z.TS = function(G,prob,b,n,y,X,beta,tau2,Delta,nu){
  out = NULL
  for(k in 1:n){
   aux_prob = exp(log(prob)+sapply(1:G,function(a) dst(y[k], aux_mu[k,a], aux_sig[a], aux_lam[a], nu,log=T))) # (eta1,eta2,eta3) x (st1,st2,st3)
+  if(any(is.na(aux_prob))){return("erro")}
   out[k] = sample(1:G,1, prob = aux_prob) # prob eh normalizado internamente
  }
  return(out)
@@ -130,7 +131,7 @@ full_K.TS = function(Gplus,Gmax,M,gammaProb, lpriori){
 
 
 full_gammaProb.TS = function(gammaP,phigamma,n,M,G,Gplus){
-  prop = rlnorm(1, log(gammaP), phigamma)
+ prop = rlnorm(1, log(gammaP), phigamma)
  
  aceit = min(1,aceitGamma(gammaP,prop,n,M,G,Gplus))
  if(aceit > 1 | aceit <0){stop("Problema no passo MH")}
