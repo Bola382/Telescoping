@@ -11,7 +11,7 @@ library(doParallel)
 
 dados = as.matrix(data[,-1]) # primeira coluna contem grupos reais
 
-R = 5 # numero de replicacoes
+R = 10 # numero de replicacoes
 Q =  260000 # iteracoes por replica
 burn = 10000 # burnin
 thin = 50 # salto
@@ -19,12 +19,12 @@ Gmax = 100 # maximo de componentes possivel
 lprio_G = logbnb(1:Gmax) # valor da log priori de G para 1:G.max
 nburn = ceiling((Q-burn)/thin) # numero de amostras pos burn
 
-file = "test1"
+file = "test2"
 dir.create(paste0("Outputs/Paralelo/",file))
 sapply(1:R, function(a) dir.create(paste0("Outputs/Paralelo/",file,"/",a),showWarnings = F))
-cl <- makeForkCluster(12) # linux
+cl <- makeForkCluster(15) # linux
 registerDoParallel(cl)
-clusterSetRNGStream(cl, 1)
+clusterSetRNGStream(cl, 7481)
 
 tempo = foreach(re = 1:R, .packages = "compiler",.verbose=T) %dopar% {
  telescope(file,re,dados,ncomps=10,nclusters=10,G.max=Gmax,lprio_G,
