@@ -1,6 +1,5 @@
 # ==================================================================
 # Verifica a convergência de uma cadeia MCMC
-# as cadeias geradas nao estao disponiveis por conta de seu tamanho
 # ==================================================================
 library(coda)
 nsamp = length(G_ok)

@@ -1,7 +1,7 @@
 # ==============================================================================
 # Gerando amostras da posteriori utilizando Telescoping
-# ==============================================================================
 # salva resultados em um .txt
+# ==============================================================================
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list=ls())

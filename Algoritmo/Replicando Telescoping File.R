@@ -1,3 +1,7 @@
+# ==============================================================================
+# Replicacoes em paralelo do Telescoping utlizando o "Funcao Telescoping File.R"
+# ==============================================================================
+
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list=ls())
 invisible(sapply(list.files("Funcoes auxiliares",pattern="*.R$",full.names=TRUE, 

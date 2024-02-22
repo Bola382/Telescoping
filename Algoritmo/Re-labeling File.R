@@ -1,6 +1,5 @@
 # ==================================================================
 # Trata o problema de label switching (Sylvia Fruhwirth-Schnatter)
-# as cadeias geradas nao estao disponiveis por conta de seu tamanho
 # ===================================================================
 # file: nome da pasta em Outputs/Paralelo onde estao salvos os resultados
 # repl: qual replicacao escolher
@@ -108,7 +107,8 @@ relabel = function(file,repl,try=10){
   # verificando quais rotulos sao uma permutacao valida de {1,...,G+}
   idpermu = unlist(sapply(1:nsamp, function(a) if(identical(sort(new_label[a,]),1:GplusHat)){a}))
   npermu = length(idpermu)
-  if(npermu == 0){
+  taxa_permu = npermu/nsamp # das amostras com GplusHat comps, quantas tem permutacoes validas
+  if(taxa_permu <= .5){
     cc = 0
     repeat{
       aux = kmeans(theta,centers=GplusHat,iter.max = 5000)
@@ -118,13 +118,13 @@ relabel = function(file,repl,try=10){
       # verificando quais rotulos sao uma permutacao valida de {1,...,G+}
       idpermu = unlist(sapply(1:nsamp, function(a) if(identical(sort(new_label[a,]),1:GplusHat)){a}))
       npermu = length(idpermu)
+      taxa_permu = npermu/nsamp
       cc = cc+1
-      if(npermu != 0){break}
-      if(npermu == 0 & cc == try){return("exception")}
+      if(taxa_permu > .5){break}
+      if(taxa_permu <= .5 & cc == try){return(taxa_permu)}
     }
   }
-  
-  taxa_permu = npermu/nsamp # das amostras com GplusHat comps, quantas tem permutacoes validas 
+   
   # ajustando os rotulos dos parametros em cada permutacao valida
   
   prob_ok = matrix(NA, nrow = npermu, ncol = GplusHat, dimnames = list(1:npermu,paste0("p_",1:GplusHat)))

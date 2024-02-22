@@ -1,5 +1,6 @@
 # ==============================================================================
-# Gerando amostras da posteriori utilizando Telescoping e solucionando label-switching
+# Gerando amostras da posteriori utilizando Telescoping
+# salva resultados em um .txt
 # ==============================================================================
 # necessita carregar a pasta "Funcoes auxiliares" e a funcao "dst.R"
 # e do pacote "compiler"
