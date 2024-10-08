@@ -8,13 +8,13 @@ rm(list=ls())
 invisible(sapply(list.files("Funcoes auxiliares",pattern="*.R$",full.names=TRUE, 
                             ignore.case=TRUE),source,.GlobalEnv))
 
-load("~/Marcus/Misturas de normais/dados.RData")
+load("dados/dados6.RData")
 
 head(dados)
 
 n = nrow(dados)
 
-Q = 50000 # numero de iteracoes
+Q = 100000 # numero de iteracoes
 
 # ~~~~~~~~~~~~~~~~
 # valores iniciais
@@ -55,17 +55,18 @@ pb = progress_bar$new(format, clear = FALSE, total = Q, complete = "=", incomple
 # ~~~~~~~~~~~~~~~~~~~
 # Config output
 # ~~~~~~~~~~~~~~~~~~~
-cat(paste0("mu_",1:G.max),"\n", file = "Outputs/test1/mu.txt")
-cat(paste0("sigma2_",1:G.max),"\n", file = "Outputs/test1/sigma2.txt")
-cat(paste0("p_",1:G.max),"\n", file = "Outputs/test1/prob.txt")
-cat("gammaP","Gplus","G","\n", file = "Outputs/test1/param.txt")
-cat(paste0("z_",1:n),"\n", file = "Outputs/test1/z.txt")
+test = 6
+cat(paste0("mu_",1:G.max),"\n", file = paste0("Outputs/test",test,"/mu.txt"))
+cat(paste0("sigma2_",1:G.max),"\n", file = paste0("Outputs/test",test,"/sigma2.txt"))
+cat(paste0("p_",1:G.max),"\n", file = paste0("Outputs/test",test,"/prob.txt"))
+cat("gammaP","Gplus","G","\n", file = paste0("Outputs/test",test,"/param.txt"))
+cat(paste0("z_",1:n),"\n", file = paste0("Outputs/test",test,"/z.txt"))
 
-cat(mu.samp[1,],"\n", file = "Outputs/test1/mu.txt", append=T)
-cat(sigma2.samp[1,],"\n", file = "Outputs/test1/sigma2.txt", append=T)
-cat(prob.samp[1,],"\n", file = "Outputs/test1/prob.txt", append=T)
-cat(gammaProb[1],Gplus.samp[1],G.samp[1],"\n", file = "Outputs/test1/param.txt", append=T)
-cat(z.samp[1,],"\n", file = "Outputs/test1/z.txt", append=T)
+cat(mu.samp[1,],"\n", file = paste0("Outputs/test",test,"/mu.txt"), append=T)
+cat(sigma2.samp[1,],"\n", file = paste0("Outputs/test",test,"/sigma2.txt"), append=T)
+cat(prob.samp[1,],"\n", file = paste0("Outputs/test",test,"/prob.txt"), append=T)
+cat(gammaProb[1],Gplus.samp[1],G.samp[1],"\n", file = paste0("Outputs/test",test,"/param.txt"), append=T)
+cat(z.samp[1,],"\n", file = paste0("Outputs/test",test,"/z.txt"), append=T)
 
 # -------------------------------------------------------------------------------
 #                                    Amostrador
@@ -167,11 +168,11 @@ for(i in 2:Q){
  prob.samp[2,compindex] = full_prob.TS(z.samp[2,],G.samp[2],gammaProb[2])
  
  # output
- cat(mu.samp[2,],"\n", file = "Outputs/test1/mu.txt", append=T)
- cat(sigma2.samp[2,],"\n", file = "Outputs/test1/sigma2.txt", append=T)
- cat(prob.samp[2,],"\n", file = "Outputs/test1/prob.txt", append=T)
- cat(gammaProb[2],Gplus.samp[2],G.samp[2],"\n", file = "Outputs/test1/param.txt", append=T)
- cat(z.samp[2,],"\n", file = "Outputs/test1/z.txt", append=T)
+ cat(mu.samp[2,],"\n", file = paste0("Outputs/test",test,"/mu.txt"), append=T)
+ cat(sigma2.samp[2,],"\n", file = paste0("Outputs/test",test,"/sigma2.txt"), append=T)
+ cat(prob.samp[2,],"\n", file = paste0("Outputs/test",test,"/prob.txt"), append=T)
+ cat(gammaProb[2],Gplus.samp[2],G.samp[2],"\n", file = paste0("Outputs/test",test,"/param.txt"), append=T)
+ cat(z.samp[2,],"\n", file = paste0("Outputs/test",test,"/z.txt"), append=T)
  
  # o novo se torna antigo na proxima iteracao
  z.samp[1,] = z.samp[2,]
@@ -190,28 +191,35 @@ for(i in 2:Q){
  pb$tick(tokens = list(prop = paste0(formatC(contgamma/i * 100,2,format="f"),"%")))
 };time_ok = Sys.time()-t_tmp
 
-saida = read.table("Outputs/test1/param.txt",h=T)
-plot((saida$G)[40001:Q], type="l")
+
+burn = 75000
+thin = 5
+
+id = seq(burn+1,Q, by = thin); length(id)
+
+saida = read.table(paste0("Outputs/test",test,"/param.txt"),h=T)
+plot((saida$G), type="l")
 plot(saida$Gplus, type="l")
-plot(log(saida$gammaP), type="l")
+plot(log(saida$gammaP)[id], type="l")
 
-barplot(prop.table(table(saida$G[(Q/2):(Q/2+1000)])),  ylim = c(0,.5))
-barplot(prop.table(table(saida$G[(Q-1000):(Q)])), add = T, col =2)
+barplot(prop.table(table(saida$G[id[1:501]])),  ylim = c(0,.8))
+barplot(prop.table(table(saida$G[id[(length(id)-500):length(id)]])), add = T, col =2)
 
-round(prop.table(table(saida$Gplus[40001:Q])),4)
-round(prop.table(table(saida$G[40001:Q])),4)
+barplot(prop.table(table(saida$Gplus[id[1:501]])),  ylim = c(0,1))
+barplot(prop.table(table(saida$Gplus[id[(length(id)-500):length(id)]])), add = T, col =2)
+
+barplot(prop.table(table(saida$G[id])), ylim = c(0,1))
+barplot(prop.table(table(saida$Gplus[id])), ylim = c(0,1))
+
+round(prop.table(table(saida$Gplus[id])),4)
+round(prop.table(table(saida$G[id])),4)
 
 source("Re-labeling File.R")
 
-burn = Q/2
-thin = 5
-
-id = seq(Q/2+1,Q, by = thin); length(id)
-
-mu.samp = read.table("Outputs/test1/mu.txt",h=T)[id,]
-sigma2.samp = read.table("Outputs/test1/sigma2.txt",h=T)[id,]
-prob.samp = read.table("Outputs/test1/prob.txt",h=T)[id,]
-z.samp = read.table("Outputs/test1/z.txt",h=T)[id,]
+mu.samp = read.table(paste0("Outputs/test",test,"/mu.txt"),h=T)[id,]
+sigma2.samp = read.table(paste0("Outputs/test",test,"/sigma2.txt"),h=T)[id,]
+prob.samp = read.table(paste0("Outputs/test",test,"/prob.txt"),h=T)[id,]
+z.samp = read.table(paste0("Outputs/test",test,"/z.txt"),h=T)[id,]
 gammaP.samp = saida$gammaP[id]
 Gplus.samp = saida$Gplus[id]
 G.samp = saida$G[id]
@@ -226,14 +234,14 @@ barplot(prop.table(table(G.samp[4001:5000])),  xlim = c(0,11),ylim = c(0,.5), xl
 barplot(prop.table(table(G.samp[1:1000])), add = T, col =2)
 legend("topright", legend = c("Mil primeiras", "Mil últimas"), fill = c("red","gray"))
 
-relabel(mu.samp, sigma2.samp, prob.samp, z.samp, gammaP.samp,Gplus.samp, G.samp, try=10)
+relabel(mu.samp, sigma2.samp, prob.samp, z.samp, gammaP.samp,Gplus.samp, G.samp, try=100, test)
 
-saida = read.table("Outputs/test1/corrigido/param.txt",h=T)
+saida = read.table(paste0("Outputs/test",test,"/corrigido/param.txt"),h=T)
 
-mu.samp = read.table("Outputs/test1/corrigido/mu.txt",h=T)
-sigma2.samp = read.table("Outputs/test1/corrigido/sigma2.txt",h=T)
-prob.samp = read.table("Outputs/test1/corrigido/prob.txt",h=T)
-z.samp = read.table("Outputs/test1/corrigido/z.txt",h=T)
+mu.samp = read.table(paste0("Outputs/test",test,"/corrigido/mu.txt"),h=T)
+sigma2.samp = read.table(paste0("Outputs/test",test,"/corrigido/sigma2.txt"),h=T)
+prob.samp = read.table(paste0("Outputs/test",test,"/corrigido/prob.txt"),h=T)
+z.samp = read.table(paste0("Outputs/test",test,"/corrigido/z.txt"),h=T)
 gammaP.samp = saida$gammaP
 G.samp = saida$G
 
@@ -243,16 +251,19 @@ nomes = c("p",expression(mu),expression(sigma^2))
 range1 = c(0,1)
 range2 = mu.samp
 
-par(mfrow = c(3,3), mar = c(2.1, 4.1, 2.1, 1.1))
+nperm = length(gammaP.samp)
+GplusHat = unique(sort(Gplus.samp))[which.max(table(Gplus.samp ))]
+
+par(mfrow = c(3,GplusHat), mar = c(2.1, 4.1, 2.1, 1.1))
 for(i in 1:3){
- for(j in 1:3){
+ for(j in 1:GplusHat){
   if(i == 1){
-   plot(1, type = "n", xlim = c(0,3000), ylim = c(0,1), xlab = "",
+   plot(1, type = "n", xlim = c(0,nperm), ylim = c(0,1), xlab = "",
         ylab = ifelse(j==1,nomes[i],""))
    lines(aux[[1]][,j])
   }else{
    if(i == 3){par(mar = c(5.1, 4.1, 2.1, 1.1))}
-   plot(1, type = "n", xlim = c(0,3000), ylim = range(aux[[i]][,j]), 
+   plot(1, type = "n", xlim = c(0,nperm), ylim = range(aux[[i]][,j]), 
         xlab = ifelse(i==3, "Iterações",""),
         ylab = ifelse(j==1,nomes[i],""))
    lines(aux[[i]][,j])
@@ -266,3 +277,10 @@ round(coda::HPDinterval(coda::mcmc(aux2)),4)
 
 mean(G.samp)
 coda::HPDinterval(coda::mcmc(G.samp))
+
+moda = function(x) unique(sort(x))[which.max(table(x))]
+classifica = apply(z.samp, 2, moda)
+
+par(mfrow = c(1,1), mar = c(5.1, 4.1, 4.1, 1.1))
+plot(y, pch = 16, cex = .7, xlab = "Índice", ylab = "Amostra", col = z)
+plot(y, pch = 16, cex = .7, xlab = "Índice", ylab = "Amostra", col = classifica)

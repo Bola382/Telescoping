@@ -4,8 +4,8 @@
 # file: nome da pasta em Outputs/Paralelo onde estao salvos os resultados
 # try: numero de tentativas maximas do kmeans
 
-relabel = function(mu,sigma2,prob,z,gammaP,Gplus,G,try=10){
- caminho2 = paste0("Outputs/test1/corrigido/")
+relabel = function(mu,sigma2,prob,z,gammaP,Gplus,G,try=10, test,saida = ""){
+ caminho2 = paste0(paste0("Outputs",saida,"/test",test,"/corrigido/"))
  # estimando G+
  GplusHat = unique(sort(Gplus))[which.max(table(Gplus))]
  

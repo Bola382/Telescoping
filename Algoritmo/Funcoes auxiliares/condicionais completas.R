@@ -63,7 +63,7 @@ full_tau2.TS = function(j,b,r,s,Xj,uj,yj,tj,M,beta,Delta){
  beta = as.matrix(beta) # caso tenha so 1 grupo
  S3 = sum(uj*(yj-Xj%*%beta[,j]-(b+tj)*Delta[j])^2)
  
- 1/rgamma(1, shape = M[j]/2+r, rate = (S3+s)/2)
+ 1/rgamma(1, shape = M[j]/2+r, rate = (S3/2+s))
 }
 
 full_Delta.TS = function(j,b,omega,Xj,uj,yj,tj,M,beta,tau2){

@@ -64,3 +64,27 @@ full_theta.TS = function(j,M,S1,S2, eta, omega, a, b){
  
  return(c(med,sig2))
 }
+
+full_mu.TS = function(j, M, S1, eta, omega, sigma2j){
+  denom = sigma2j+M[j]*omega^2
+  med = (sigma2j*eta+omega^2*S1)/denom
+  des = sqrt(sigma2j*omega^2/denom)
+  rnorm(1, mean = med, sd = des)
+}
+
+full_sig2.TS = function(j, M, S2, a, b){
+  1/rgamma(1, shape = M[j]/2 + a, rate = S2/2 + b)
+}
+
+full_eta.TS = function(G, alpha, beta, mu, omega){
+  denom = omega^2 + G*beta^2
+  med = (alpha*omega^2+beta^2*sum(mu))/denom
+  des = sqrt(beta^2*omega^2/denom)
+  
+  rnorm(1, mean = med, sd = des)
+}
+
+full_omega2.TS = function(G, r, s, mu, eta){
+  soma = sum((mu-eta)^2)
+  1/rgamma(1, shape = G/2 + r, soma/2+s)
+}
