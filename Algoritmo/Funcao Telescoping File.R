@@ -44,7 +44,8 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
  xi = rep(gammaProb/G.samp,G.samp) # prob
  c = 10 # da beta (c <- sqrt(c) das minhas contas)
  eta = 0; omega = 10 # da Delta
- r = s = .1 # da tau2
+ r = 2.1
+ s = 1.1 # da tau2
  
  prob.samp[1,1:G.samp] = gtools::rdirichlet(1, alpha = xi) # pesos
  beta.samp[1,,1:G.samp] = matrix(rnorm(p*G.samp,sd=c),ncol=G.samp) # coef reg
@@ -89,7 +90,7 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
   # a) Atualizando Z
   # ----------------------
   z.samp[2,] = full_Z.TS(G.samp[1],prob.samp[1,1:G.samp[1]],
-                         b,n,y,X,
+                         b,y,X,
                          beta.samp[1,,1:G.samp[1]],
                          tau2.samp[1,1:G.samp[1]],
                          Delta.samp[1,1:G.samp[1]],
@@ -149,7 +150,7 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
    tj = t.samp[1,index]
    
    # Atualizando beta
-   beta.samp[2,,j] = full_beta.TS(j,b,c,n,p,Xj,Uj,yj,tj,M,
+   beta.samp[2,,j] = full_beta.TS(j,b,c,Xj,Uj,yj,tj,M,
                                   tau2.samp[1,1:G.samp[1]],
                                   Delta.samp[1,1:G.samp[1]])
    
@@ -173,13 +174,13 @@ telescope = function(folder,repl,dados,ncomps,nclusters,G.max,lprio_G,phi=.3,phi
   aux_yxbeta = y-aux_mu
   
   # atualizando U
-  u.samp[2,] = full_U.TS(aux_mu,aux_yxbeta,n,
+  u.samp[2,] = full_U.TS(aux_mu,aux_yxbeta,
                          tau2.samp[2,1:Gplus.samp[2]],
                          Delta.samp[2,1:Gplus.samp[2]],
                          nu.samp[1], t.samp[1,], z.samp[2,])
   
   # atualizando T
-  t.samp[2,] = full_T.TS(aux_mu,aux_yxbeta,n,
+  t.samp[2,] = full_T.TS(aux_mu,aux_yxbeta,
                          tau2.samp[2,1:Gplus.samp[2]],
                          Delta.samp[2,1:Gplus.samp[2]],
                          u.samp[2,], z.samp[2,])
